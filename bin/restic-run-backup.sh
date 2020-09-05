@@ -27,4 +27,5 @@ host=eff74b7e-aaaa-bbbb-cccc-eb5ccexxxxxx
 # Scoop persistent settings folder 'C:\scoop\persist'
 ${restic} -r "${repo}" -p "${pwfile}" --verbose=4 \
     backup --host "${host}" 'C:\Users\myusernameunderwindows' 'C:\scoop\persist' 2>&1 \
+    | ( iconv -c -t UTF-8 || true ) \
     | tee "${HOME}/restic_recent_logs/backup.LOG"
