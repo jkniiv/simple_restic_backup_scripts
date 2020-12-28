@@ -1,7 +1,7 @@
 #! /usr/bin/bash
 # Run the Restic backup proper.
 
-set -eu
+set -u
 set -o pipefail
 
 # Assumes Scoop (and Restic) has been installed under c:\Scoop ; make sure you use Msys2 unix-style paths!
@@ -25,7 +25,18 @@ host=eff74b7e-aaaa-bbbb-cccc-eb5ccexxxxxx
 # Tailor this invocation accordingly. Here I tee all restic output to a log file under ~/restic_recent_logs
 # This 'backup' operation for instance backs up your user profile 'C:\Users\myusernameunderwindows' and
 # Scoop persistent settings folder 'C:\scoop\persist'
-${restic} -r "${repo}" -p "${pwfile}" --verbose=4 \
+${restic} -r "${repo}" -p "${pwfile}" --verbose=3 \
     backup --host "${host}" 'C:\Users\myusernameunderwindows' 'C:\scoop\persist' 2>&1 \
     | ( iconv -c -t UTF-8 || true ) \
     | tee "${HOME}/restic_recent_logs/backup.LOG"
+
+# Restic from version 0.10.0 onward differentiates between fatal errors and incomplete backups with exit
+# codes 1 and 3 respectively. We'll assume that incomplete backups due to some files being locked (very common
+# on Windows) are still ok. Feel free to adjust to your own needs or even delete this part if so inclined.
+rc=$?
+if [[ ${rc} == 3 ]]; then
+    echo "*** Well, some files could not be backed up but I'm ok with that :)"
+    exit 0
+else
+    exit ${rc}
+fi
